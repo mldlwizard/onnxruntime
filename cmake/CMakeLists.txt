@@ -157,8 +157,10 @@ if(onnxruntime_USE_VALGRIND AND NOT WIN32)
   add_definitions(-DRE2_ON_VALGRIND=1)
 endif()
 
-if(Win32)
+if(WIN32)
+  message(${CMAKE_CXX_FLAGS})
   string(APPEND CMAKE_CXX_FLAGS " /W3")
+  message(${CMAKE_CXX_FLAGS})
 endif()
 
 if (onnxruntime_ENABLE_NVTX_PROFILE)

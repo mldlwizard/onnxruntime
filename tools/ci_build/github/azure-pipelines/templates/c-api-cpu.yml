@@ -433,6 +433,18 @@ jobs:
       artifactName: 'drop-signed-nuget'
       targetPath: '$(Build.ArtifactStagingDirectory)'
 
+  - task: RoslynAnalyzers@2
+    displayName: 'Run Roslyn Analyzers'
+    condition: and(succeeded(), eq('${{ parameters.DoCompliance }}', true))
+
+  - template: component-governance-component-detection-steps.yml
+    parameters :
+      condition : 'succeeded'
+
+  - task: mspremier.PostBuildCleanup.PostBuildCleanup-task.PostBuildCleanup@3
+    displayName: 'Clean Agent Directories'
+    condition: always()
+
 - template: ../nuget/templates/test_all_os.yml
 
 - job: Publish_NuGet_Package_And_Report
