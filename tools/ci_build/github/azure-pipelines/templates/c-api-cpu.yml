@@ -433,10 +433,6 @@ jobs:
       artifactName: 'drop-signed-nuget'
       targetPath: '$(Build.ArtifactStagingDirectory)'
 
-  - task: RoslynAnalyzers@2
-    displayName: 'Run Roslyn Analyzers'
-    condition: and(succeeded(), eq('${{ parameters.DoCompliance }}', true))
-
   - template: component-governance-component-detection-steps.yml
     parameters :
       condition : 'succeeded'
