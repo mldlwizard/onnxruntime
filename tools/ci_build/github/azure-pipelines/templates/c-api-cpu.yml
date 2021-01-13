@@ -298,7 +298,7 @@ jobs:
           echo "Directories created"
           copy .\java\build\libs\*.jar $(Build.BinariesDirectory)\onnxruntime-java-win-$(msbuildPlatform)
           pushd $(Build.BinariesDirectory)\onnxruntime-java-win-$(msbuildPlatform)
-          set artifact_id=onnxruntime          
+          set artifact_id=onnxruntime
           jar xf onnxruntime-$(OnnxRuntimeVersion).jar META-INF\maven\com.microsoft.onnxruntime\%artifact_id%\pom.xml
           move META-INF\maven\com.microsoft.onnxruntime\%artifact_id%\pom.xml onnxruntime-$(OnnxRuntimeVersion).pom
           rd /s /q META-INF
@@ -314,7 +314,9 @@ jobs:
           jar uf $(Build.BinariesDirectory)\onnxruntime-java-win-$(msbuildPlatform)\onnxruntime-$(OnnxRuntimeVersion).jar Privacy.md ThirdPartyNotices.txt GIT_COMMIT_ID
           popd
           pushd $(Build.SourcesDirectory)\java\build\classes\java\test
+          if %errorlevel% neq 0 exit /b %errorlevel%
           jar cvf $(Build.BinariesDirectory)\onnxruntime-java-win-$(msbuildPlatform)\testing.jar .
+          if %errorlevel% neq 0 exit /b %errorlevel%
           popd
           pushd $(Build.SourcesDirectory)\java\build\resources\test
           rd /s /q ai\onnxruntime\native
