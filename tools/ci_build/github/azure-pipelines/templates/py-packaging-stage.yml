@@ -578,6 +578,34 @@ stages:
         workingDirectory: '$(Build.BinariesDirectory)\RelWithDebInfo\RelWithDebInfo\dist'
         displayName: 'Rename file extension for codesign validation'
 
+      - task: DeleteFiles@1
+        displayName: 'Delete files from $(Build.BinariesDirectory)\RelWithDebInfo'
+        condition: and (succeeded(), eq(variables['PythonVersion'], '3.7'))
+        inputs:
+          SourceFolder: '$(Build.BinariesDirectory)\RelWithDebInfo'
+          Contents: |
+            **/*.obj
+            **/*.pdb
+            **/*.dll
+      
+      #Manually set msBuildCommandline so that we can also set CAExcludePath
+      - task: securedevelopmentteam.vss-secure-development-tools.build-task-prefast.SDLNativeRules@2
+        displayName: 'Run the PREfast SDL Native Rules for MSBuild'
+        condition: and (succeeded(), eq(variables['PythonVersion'], '3.7'))
+        inputs:
+          userProvideBuildInfo: msBuildInfo
+          msBuildVersion: 16.0
+          msBuildArchitecture: x64
+          msBuildCommandline: '"C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64\msbuild.exe" "$(Build.BinariesDirectory)\RelWithDebInfo\onnxruntime.sln" /p:platform="x64" /p:configuration="RelWithDebInfo" /p:CAExcludePath="$(Build.BinariesDirectory);$(Build.SourcesDirectory)\cmake;C:\program files (x86)" /p:VisualStudioVersion="16.0" /m /p:PreferredToolArchitecture=x64'
+        continueOnError: true
+
+      - task: securedevelopmentteam.vss-secure-development-tools.build-task-uploadtotsa.TSAUpload@1
+        condition: and (succeeded(), eq(variables['PythonVersion'], '3.7'))
+        displayName: 'TSA Upload'
+        inputs:
+          tsaVersion: TsaV2
+          codeBaseName: 'onnxruntime_master'
+
       - task: PublishTestResults@2
         displayName: 'Publish unit test results'
         inputs:
@@ -710,6 +738,34 @@ stages:
         displayName: 'Publish Artifact: ONNXRuntime python wheel'
         inputs:
           ArtifactName: onnxruntime_gpu
+
+      - task: DeleteFiles@1
+        displayName: 'Delete files from $(Build.BinariesDirectory)\RelWithDebInfo'
+        condition: and (succeeded(), eq(variables['PythonVersion'], '3.7'))
+        inputs:
+          SourceFolder: '$(Build.BinariesDirectory)\RelWithDebInfo'
+          Contents: |
+            **/*.obj
+            **/*.pdb
+            **/*.dll
+      
+      #Manually set msBuildCommandline so that we can also set CAExcludePath
+      - task: securedevelopmentteam.vss-secure-development-tools.build-task-prefast.SDLNativeRules@2
+        displayName: 'Run the PREfast SDL Native Rules for MSBuild'
+        condition: and (succeeded(), eq(variables['PythonVersion'], '3.7'))
+        inputs:
+          userProvideBuildInfo: msBuildInfo
+          msBuildVersion: 16.0
+          msBuildArchitecture: x64
+          msBuildCommandline: '"C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64\msbuild.exe" "$(Build.BinariesDirectory)\RelWithDebInfo\onnxruntime.sln" /p:platform="x64" /p:configuration="RelWithDebInfo" /p:CAExcludePath="$(Build.BinariesDirectory);$(Build.SourcesDirectory)\cmake;C:\program files (x86)" /p:VisualStudioVersion="16.0" /m /p:PreferredToolArchitecture=x64'
+        continueOnError: true
+
+      - task: securedevelopmentteam.vss-secure-development-tools.build-task-uploadtotsa.TSAUpload@1
+        condition: and (succeeded(), eq(variables['PythonVersion'], '3.7'))
+        displayName: 'TSA Upload'
+        inputs:
+          tsaVersion: TsaV2
+          codeBaseName: 'onnxruntime_master'
 
       - template: component-governance-component-detection-steps.yml
         parameters:
