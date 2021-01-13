@@ -162,14 +162,16 @@ jobs:
         packageName: x86
         buildparameter: --x86
         runTests: ${{ parameters.RunOnnxRuntimeTests }}
+        build_java: false
       x64:
         EnvSetupScript: setup_env.bat
         buildArch: x64
         msbuildArch: amd64
         msbuildPlatform: x64
         packageName: x64
-        buildparameter:
+        buildparameter: --build_java
         runTests: ${{ parameters.RunOnnxRuntimeTests }}
+        build_java: true
       arm:
         EnvSetupScript: setup_env.bat
         buildArch: x64
@@ -178,14 +180,16 @@ jobs:
         packageName: arm
         buildparameter: --arm
         runTests: false
+        build_java: false
       arm64:
         EnvSetupScript: setup_env.bat
         buildArch: x64
         msbuildArch: amd64
         msbuildPlatform: arm64
         packageName: arm64
-        buildparameter: --arm64
+        buildparameter: --arm64  --build_java
         runTests: false
+        build_java: true
   steps:
     - template: telemetry-steps.yml
     
@@ -223,7 +227,7 @@ jobs:
       displayName: 'Generate cmake config'
       inputs:
         scriptPath: '$(Build.SourcesDirectory)\tools\ci_build\build.py'
-        arguments: '--config RelWithDebInfo --build_java --enable_lto --disable_rtti --build_dir $(Build.BinariesDirectory) --skip_submodule_sync --build_shared_lib --update --cmake_generator "Visual Studio 16 2019" ${{ parameters.AdditionalBuildFlags }} --build_shared_lib --enable_onnx_tests --enable_wcos  --use_winml $(TelemetryOption) $(buildparameter)'
+        arguments: '--config RelWithDebInfo --enable_lto --disable_rtti --build_dir $(Build.BinariesDirectory) --skip_submodule_sync --build_shared_lib --update --cmake_generator "Visual Studio 16 2019" ${{ parameters.AdditionalBuildFlags }} --build_shared_lib --enable_onnx_tests --enable_wcos  --use_winml $(TelemetryOption) $(buildparameter)'
         workingDirectory: '$(Build.BinariesDirectory)'
  
     - task: VSBuild@1
@@ -243,7 +247,7 @@ jobs:
       condition: and(succeeded(), eq(variables.runTests, true))
       inputs:
         scriptPath: '$(Build.SourcesDirectory)\tools\ci_build\build.py'
-        arguments: '--config RelWithDebInfo --build_java --enable_lto --disable_rtti --build_dir $(Build.BinariesDirectory) --skip_submodule_sync --build_shared_lib --test --cmake_generator "Visual Studio 16 2019" ${{ parameters.AdditionalBuildFlags }} --build_shared_lib --enable_onnx_tests --enable_wcos  --use_winml $(TelemetryOption) $(buildparameter)'
+        arguments: '--config RelWithDebInfo --enable_lto --disable_rtti --build_dir $(Build.BinariesDirectory) --skip_submodule_sync --build_shared_lib --test --cmake_generator "Visual Studio 16 2019" ${{ parameters.AdditionalBuildFlags }} --build_shared_lib --enable_onnx_tests --enable_wcos  --use_winml $(TelemetryOption) $(buildparameter)'
         workingDirectory: '$(Build.BinariesDirectory)'
 
     - script: |
@@ -283,15 +287,17 @@ jobs:
         targetPath: '$(Build.BinariesDirectory)\RelWithDebInfo\external\protobuf\cmake\RelWithDebInfo\protoc.exe' 
         artifactName: 'drop-nuget'
 
-    - template: java-api-artifacts-package-and-publish-steps-windows.yml
-      parameters:
-        buildConfig: RelWithDebInfo
-        artifactName: 'onnxruntime-java-win-$(msbuildPlatform)'
-        version: '$(OnnxRuntimeVersion)'
-        commitId: $(OnnxRuntimeGitCommitHash)
+    - ${{ if eq(variables['build_java'], 'true') }}:
+        - template: java-api-artifacts-package-and-publish-steps-windows.yml
+          parameters:
+            buildConfig: RelWithDebInfo
+            artifactName: 'onnxruntime-java-win-$(msbuildPlatform)'
+            version: '$(OnnxRuntimeVersion)'
+            commitId: $(OnnxRuntimeGitCommitHash)
 
     - ${{ if eq(parameters['DoCompliance'], 'true') }}:
       - task: Semmle@0
+        condition: and(succeeded(), eq(variables.build_java, true))
         inputs:
           sourceCodeDirectory: '$(Build.SourcesDirectory)\java'
           language: 'java'
@@ -306,7 +312,7 @@ jobs:
         displayName: 'Regenerate cmake config with STATIC_ANALYSIS=ON '
         inputs:
           scriptPath: '$(Build.SourcesDirectory)\tools\ci_build\build.py'
-          arguments: '--config RelWithDebInfo --build_java --enable_lto --disable_rtti --build_dir $(Build.BinariesDirectory) --skip_submodule_sync --build_shared_lib --update --cmake_generator "Visual Studio 16 2019" ${{ parameters.AdditionalBuildFlags }} --build_shared_lib --enable_onnx_tests --enable_wcos  --use_winml $(TelemetryOption) $(buildparameter) --cmake_extra_defines onnxruntime_ENABLE_STATIC_ANALYSIS=ON'
+          arguments: '--config RelWithDebInfo --enable_lto --disable_rtti --build_dir $(Build.BinariesDirectory) --skip_submodule_sync --build_shared_lib --update --cmake_generator "Visual Studio 16 2019" ${{ parameters.AdditionalBuildFlags }} --build_shared_lib --enable_onnx_tests --enable_wcos  --use_winml $(TelemetryOption) $(buildparameter) --cmake_extra_defines onnxruntime_ENABLE_STATIC_ANALYSIS=ON'
           workingDirectory: '$(Build.BinariesDirectory)'
 
       - template: compliance.yml
