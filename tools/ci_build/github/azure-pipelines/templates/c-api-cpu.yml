@@ -49,7 +49,7 @@ jobs:
           mkdir -p $HOME/.onnx
           docker run --rm --volume /data/onnx:/data/onnx:ro --volume $(Build.SourcesDirectory):/onnxruntime_src --volume $(Build.BinariesDirectory):/build \
           --volume $HOME/.onnx:/home/onnxruntimedev/.onnx -e NIGHTLY_BUILD onnxruntimecentoscpubuild python3 \
-          /onnxruntime_src/tools/ci_build/build.py --build_dir /build --config Release \
+          /onnxruntime_src/tools/ci_build/build.py --build_java --build_dir /build --config Release \
           --skip_submodule_sync  --parallel --build_shared_lib ${{ parameters.AdditionalBuildFlags }}
         workingDirectory: $(Build.SourcesDirectory)
 
@@ -65,6 +65,15 @@ jobs:
       inputs:
         artifactName: 'drop-linux'
         targetPath: '$(Build.ArtifactStagingDirectory)'
+
+    - template: templates/java-api-artifacts-package-and-publish-steps-posix.yml
+      parameters:
+          arch: 'linux-x64'
+          buildConfig: 'Release'
+          artifactName: 'onnxruntime-java-linux-x64'
+          version: '$(OnnxRuntimeVersion)'
+          libraryName: 'libonnxruntime.so'
+          nativeLibraryName: 'libonnxruntime4j_jni.so'
 
     - template: c-api-artifacts-package-and-publish-steps-posix.yml
       parameters:
@@ -102,7 +111,7 @@ jobs:
         sudo python3 -m pip install -r '$(Build.SourcesDirectory)/tools/ci_build/github/linux/docker/scripts/requirements.txt'
         sudo xcode-select --switch /Applications/Xcode_10.app/Contents/Developer
         brew install libomp
-        python3 $(Build.SourcesDirectory)/tools/ci_build/build.py ${{ parameters.AdditionalBuildFlags }} --build_dir $(Build.BinariesDirectory) --skip_submodule_sync --parallel --build_shared_lib --config Release
+        python3 $(Build.SourcesDirectory)/tools/ci_build/build.py --build_java ${{ parameters.AdditionalBuildFlags }} --build_dir $(Build.BinariesDirectory) --skip_submodule_sync --parallel --build_shared_lib --config Release
       displayName: 'Build and Test MacOS'
     - template: c-api-artifacts-package-and-publish-steps-posix.yml
       parameters:
@@ -123,7 +132,16 @@ jobs:
       inputs:
         artifactName: 'drop-osx'
         targetPath: '$(Build.ArtifactStagingDirectory)'
-          
+
+    - template: templates/java-api-artifacts-package-and-publish-steps-posix.yml
+      parameters:
+          arch: 'osx-x64'
+          buildConfig: 'RelWithDebInfo'
+          artifactName: 'onnxruntime-java-osx-x64'
+          version: '$(OnnxRuntimeVersion)'
+          libraryName: 'libonnxruntime.dylib'
+          nativeLibraryName: 'libonnxruntime4j_jni.dylib'
+
     - template: component-governance-component-detection-steps.yml
       parameters :
         condition : 'succeeded'
@@ -205,7 +223,7 @@ jobs:
       displayName: 'Generate cmake config'
       inputs:
         scriptPath: '$(Build.SourcesDirectory)\tools\ci_build\build.py'
-        arguments: '--config RelWithDebInfo --enable_lto --disable_rtti --build_dir $(Build.BinariesDirectory) --skip_submodule_sync --build_shared_lib --update --cmake_generator "Visual Studio 16 2019" ${{ parameters.AdditionalBuildFlags }} --build_shared_lib --enable_onnx_tests --enable_wcos  --use_winml $(TelemetryOption) $(buildparameter)'
+        arguments: '--config RelWithDebInfo --build_java --enable_lto --disable_rtti --build_dir $(Build.BinariesDirectory) --skip_submodule_sync --build_shared_lib --update --cmake_generator "Visual Studio 16 2019" ${{ parameters.AdditionalBuildFlags }} --build_shared_lib --enable_onnx_tests --enable_wcos  --use_winml $(TelemetryOption) $(buildparameter)'
         workingDirectory: '$(Build.BinariesDirectory)'
  
     - task: VSBuild@1
@@ -225,7 +243,7 @@ jobs:
       condition: and(succeeded(), eq(variables.runTests, true))
       inputs:
         scriptPath: '$(Build.SourcesDirectory)\tools\ci_build\build.py'
-        arguments: '--config RelWithDebInfo --enable_lto --disable_rtti --build_dir $(Build.BinariesDirectory) --skip_submodule_sync --build_shared_lib --test --cmake_generator "Visual Studio 16 2019" ${{ parameters.AdditionalBuildFlags }} --build_shared_lib --enable_onnx_tests --enable_wcos  --use_winml $(TelemetryOption) $(buildparameter)'
+        arguments: '--config RelWithDebInfo --build_java --enable_lto --disable_rtti --build_dir $(Build.BinariesDirectory) --skip_submodule_sync --build_shared_lib --test --cmake_generator "Visual Studio 16 2019" ${{ parameters.AdditionalBuildFlags }} --build_shared_lib --enable_onnx_tests --enable_wcos  --use_winml $(TelemetryOption) $(buildparameter)'
         workingDirectory: '$(Build.BinariesDirectory)'
 
     - script: |
@@ -265,12 +283,30 @@ jobs:
         targetPath: '$(Build.BinariesDirectory)\RelWithDebInfo\external\protobuf\cmake\RelWithDebInfo\protoc.exe' 
         artifactName: 'drop-nuget'
 
+    - template: templates/java-api-artifacts-package-and-publish-steps-windows.yml
+      parameters:
+        buildConfig: RelWithDebInfo
+        artifactName: 'onnxruntime-java-win-$(msbuildPlatform)'
+        version: '$(OnnxRuntimeVersion)'
+        commitId: $(OnnxRuntimeGitCommitHash)
+
     - ${{ if eq(parameters['DoCompliance'], 'true') }}:
+      - task: Semmle@0
+        inputs:
+          sourceCodeDirectory: '$(Build.SourcesDirectory)\java'
+          language: 'java'
+          cleanupBuildCommands: 'C:\ProgramData\chocolatey\bin\gradle.exe -Dorg.gradle.daemon=false clean'
+          buildCommands: 'C:\ProgramData\chocolatey\bin\gradle.exe -Dorg.gradle.daemon=false jar'
+          querySuite: 'Recommended'
+          timeout: '7200'
+          ram: '16384'
+          addProjectDirToScanningExclusionList: true
+
       - task: PythonScript@0
         displayName: 'Regenerate cmake config with STATIC_ANALYSIS=ON '
         inputs:
           scriptPath: '$(Build.SourcesDirectory)\tools\ci_build\build.py'
-          arguments: '--config RelWithDebInfo --enable_lto --disable_rtti --build_dir $(Build.BinariesDirectory) --skip_submodule_sync --build_shared_lib --update --cmake_generator "Visual Studio 16 2019" ${{ parameters.AdditionalBuildFlags }} --build_shared_lib --enable_onnx_tests --enable_wcos  --use_winml $(TelemetryOption) $(buildparameter) --cmake_extra_defines onnxruntime_ENABLE_STATIC_ANALYSIS=ON'
+          arguments: '--config RelWithDebInfo --build_java --enable_lto --disable_rtti --build_dir $(Build.BinariesDirectory) --skip_submodule_sync --build_shared_lib --update --cmake_generator "Visual Studio 16 2019" ${{ parameters.AdditionalBuildFlags }} --build_shared_lib --enable_onnx_tests --enable_wcos  --use_winml $(TelemetryOption) $(buildparameter) --cmake_extra_defines onnxruntime_ENABLE_STATIC_ANALYSIS=ON'
           workingDirectory: '$(Build.BinariesDirectory)'
 
       - template: compliance.yml
@@ -284,6 +320,85 @@ jobs:
     - task: mspremier.PostBuildCleanup.PostBuildCleanup-task.PostBuildCleanup@3
       displayName: 'Clean Agent Directories'
       condition: always()
+
+
+
+- job: Jar_Packaging
+  workspace:
+    clean: all
+  pool: 'Win-CPU-2019'
+  dependsOn:
+  - Linux_C_API_Packaging_CPU_x64
+  - MacOS_C_API_Packaging_CPU_x64
+  - Windows_Packaging_CPU
+  condition: succeeded()
+  steps:
+  - template: templates/set-version-number-variables-step.yml
+
+  - task: DownloadPipelineArtifact@2
+    displayName: 'Download Pipeline Artifact - Win x64'
+    inputs:
+      buildType: 'current'
+      artifactName: 'drop-onnxruntime-java-win-x64'
+      targetPath: '$(Build.BinariesDirectory)\java-artifact'
+
+  - task: DownloadPipelineArtifact@2
+    displayName: 'Download Pipeline Artifact - Linux x64'
+    inputs:
+      buildType: 'current'
+      artifactName: 'drop-onnxruntime-java-linux-x64'
+      targetPath: '$(Build.BinariesDirectory)\java-artifact'
+
+  - task: DownloadPipelineArtifact@2
+    displayName: 'Download Pipeline Artifact - MacOS x64'
+    inputs:
+      buildType: 'current'
+      artifactName: 'drop-onnxruntime-java-osx-x64'
+      targetPath: '$(Build.BinariesDirectory)\java-artifact'
+
+  - task: ExtractFiles@1
+    inputs:
+      archiveFilePatterns: '$(Build.BinariesDirectory)\java-artifact\onnxruntime-java-win-x64.zip'
+      destinationFolder: '$(Build.BinariesDirectory)\java-artifact'
+      cleanDestinationFolder: false
+
+  - task: ExtractFiles@1
+    inputs:
+      archiveFilePatterns: '$(Build.BinariesDirectory)\java-artifact\onnxruntime-java-linux-x64.zip'
+      destinationFolder: '$(Build.BinariesDirectory)\java-artifact'
+      cleanDestinationFolder: false
+
+  - task: ExtractFiles@1
+    inputs:
+      archiveFilePatterns: '$(Build.BinariesDirectory)\java-artifact\onnxruntime-java-osx-x64.zip'
+      destinationFolder: '$(Build.BinariesDirectory)\java-artifact'
+      cleanDestinationFolder: false
+ 
+  - task: CmdLine@2
+    inputs:
+      script: |
+        @echo on
+        pushd onnxruntime-java-linux-x64
+        jar uf  $(Build.BinariesDirectory)\java-artifact\onnxruntime-java-win-x64\testing.jar libcustom_op_library.so
+        del /F /Q libcustom_op_library.so
+        jar uf  $(Build.BinariesDirectory)\java-artifact\onnxruntime-java-win-x64\onnxruntime-$(OnnxRuntimeVersion).jar .
+        popd
+        pushd onnxruntime-java-osx-x64
+        jar uf  $(Build.BinariesDirectory)\java-artifact\onnxruntime-java-win-x64\testing.jar libcustom_op_library.dylib
+        del /F /Q libcustom_op_library.dylib
+        jar uf  $(Build.BinariesDirectory)\java-artifact\onnxruntime-java-win-x64\onnxruntime-$(OnnxRuntimeVersion).jar .
+        popd
+      workingDirectory: '$(Build.BinariesDirectory)\java-artifact'
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      targetPath: '$(Build.BinariesDirectory)\java-artifact\onnxruntime-java-win-x64'
+      artifact: 'onnxruntime-java'
+      publishLocation: 'pipeline'
+
+  - template: templates/component-governance-component-detection-steps.yml
+    parameters :
+      condition : 'succeeded'
 
 - job: NuGet_Packaging
   workspace:
@@ -432,6 +547,14 @@ jobs:
     inputs:
       artifactName: 'drop-signed-nuget'
       targetPath: '$(Build.ArtifactStagingDirectory)'
+
+  - task: RoslynAnalyzers@2
+    displayName: 'Run Roslyn Analyzers'
+    inputs:
+      userProvideBuildInfo: msBuildInfo
+      msBuildArchitecture: x64
+      msBuildCommandline: '"C:\Program Files\dotnet\dotnet.exe" build $(Build.SourcesDirectory)\csharp\OnnxRuntime.CSharp.sln --configuration RelWithDebInfo -p:Platform="Any CPU" -p:OnnxRuntimeBuildDirectory="$(Build.BinariesDirectory)" -p:OrtPackageId=$(OrtPackageId)'
+    condition: and(succeeded(), eq('${{ parameters.DoCompliance }}', true))
 
   - template: component-governance-component-detection-steps.yml
     parameters :
