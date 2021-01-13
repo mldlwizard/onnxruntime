@@ -287,7 +287,7 @@ jobs:
         targetPath: '$(Build.BinariesDirectory)\RelWithDebInfo\external\protobuf\cmake\RelWithDebInfo\protoc.exe' 
         artifactName: 'drop-nuget'
 
-    - ${{ if eq(variables['build_java'], 'true') }}:
+    - ${{ if eq(variables.build_java, 'true') }}:
         - template: java-api-artifacts-package-and-publish-steps-windows.yml
           parameters:
             buildConfig: RelWithDebInfo
@@ -558,7 +558,7 @@ jobs:
     displayName: 'Run Roslyn Analyzers'
     inputs:
       userProvideBuildInfo: msBuildInfo
-      msBuildArchitecture: x64
+      msBuildArchitecture: 'Any CPU'
       msBuildCommandline: '"C:\Program Files\dotnet\dotnet.exe" build $(Build.SourcesDirectory)\csharp\OnnxRuntime.CSharp.sln --configuration RelWithDebInfo -p:Platform="Any CPU" -p:OnnxRuntimeBuildDirectory="$(Build.BinariesDirectory)" -p:OrtPackageId=$(OrtPackageId)'
     condition: and(succeeded(), eq('${{ parameters.DoCompliance }}', true))
 
