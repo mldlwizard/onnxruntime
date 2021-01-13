@@ -307,7 +307,7 @@ jobs:
           copy .\RelWithDebInfo\onnxruntime4j_jni.pdb %NATIVE_FOLDER%
           copy $(Build.SourcesDirectory)\docs\Privacy.md $(Build.BinariesDirectory)\onnxruntime-java-win-$(msbuildPlatform)\stage\Privacy.md
           copy $(Build.SourcesDirectory)\ThirdPartyNotices.txt $(Build.BinariesDirectory)\onnxruntime-java-win-$(msbuildPlatform)\stage\ThirdPartyNotices.txt
-          @echo ${{parameters.commitId}} > $(Build.BinariesDirectory)\onnxruntime-java-win-$(msbuildPlatform)\stage\GIT_COMMIT_ID
+          @echo $(OnnxRuntimeGitCommitHash) > $(Build.BinariesDirectory)\onnxruntime-java-win-$(msbuildPlatform)\stage\GIT_COMMIT_ID
           pushd $(Build.BinariesDirectory)\onnxruntime-java-win-$(msbuildPlatform)\stage
           jar uf $(Build.BinariesDirectory)\onnxruntime-java-win-$(msbuildPlatform)\onnxruntime-$(OnnxRuntimeVersion).jar ai\onnxruntime\native\win-x64\onnxruntime.pdb
           jar uf $(Build.BinariesDirectory)\onnxruntime-java-win-$(msbuildPlatform)\onnxruntime-$(OnnxRuntimeVersion).jar ai\onnxruntime\native\win-x64\onnxruntime4j_jni.pdb
