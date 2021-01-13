@@ -778,6 +778,7 @@ stages:
             --cuda_home="C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v$(CUDA_VERSION)"
             --cudnn_home="C:\local\cudnn-$(CUDA_VERSION)-windows10-x64-v8.0.3.33\cuda"
             $(TelemetryOption)
+            --update
             --cmake_extra_defines onnxruntime_ENABLE_STATIC_ANALYSIS=ON
           workingDirectory: '$(Build.BinariesDirectory)'
 
