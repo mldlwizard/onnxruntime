@@ -287,13 +287,61 @@ jobs:
         targetPath: '$(Build.BinariesDirectory)\RelWithDebInfo\external\protobuf\cmake\RelWithDebInfo\protoc.exe' 
         artifactName: 'drop-nuget'
 
-    - ${{ if eq(variables.build_java, 'true') }}:
-        - template: java-api-artifacts-package-and-publish-steps-windows.yml
-          parameters:
-            buildConfig: RelWithDebInfo
-            artifactName: 'onnxruntime-java-win-$(msbuildPlatform)'
-            version: '$(OnnxRuntimeVersion)'
-            commitId: $(OnnxRuntimeGitCommitHash)
+
+    - task: CmdLine@2
+      condition: and(succeeded(), eq(variables.build_java, true))
+      inputs:
+        script: |
+          @echo on
+          set NATIVE_FOLDER=$(Build.BinariesDirectory)\onnxruntime-java-win-$(msbuildPlatform)\stage\ai\onnxruntime\native\win-x64
+          mkdir %NATIVE_FOLDER%
+          echo "Directories created"
+          copy .\java\build\libs\*.jar $(Build.BinariesDirectory)\onnxruntime-java-win-$(msbuildPlatform)
+          pushd $(Build.BinariesDirectory)\onnxruntime-java-win-$(msbuildPlatform)
+          set artifact_id=onnxruntime          
+          jar xf onnxruntime-$(OnnxRuntimeVersion).jar META-INF\maven\com.microsoft.onnxruntime\%artifact_id%\pom.xml
+          move META-INF\maven\com.microsoft.onnxruntime\%artifact_id%\pom.xml onnxruntime-$(OnnxRuntimeVersion).pom
+          rd /s /q META-INF
+          popd
+          copy .\RelWithDebInfo\onnxruntime.pdb %NATIVE_FOLDER%
+          copy .\RelWithDebInfo\onnxruntime4j_jni.pdb %NATIVE_FOLDER%
+          copy $(Build.SourcesDirectory)\docs\Privacy.md $(Build.BinariesDirectory)\onnxruntime-java-win-$(msbuildPlatform)\stage\Privacy.md
+          copy $(Build.SourcesDirectory)\ThirdPartyNotices.txt $(Build.BinariesDirectory)\onnxruntime-java-win-$(msbuildPlatform)\stage\ThirdPartyNotices.txt
+          @echo ${{parameters.commitId}} > $(Build.BinariesDirectory)\onnxruntime-java-win-$(msbuildPlatform)\stage\GIT_COMMIT_ID
+          pushd $(Build.BinariesDirectory)\onnxruntime-java-win-$(msbuildPlatform)\stage
+          jar uf $(Build.BinariesDirectory)\onnxruntime-java-win-$(msbuildPlatform)\onnxruntime-$(OnnxRuntimeVersion).jar ai\onnxruntime\native\win-x64\onnxruntime.pdb
+          jar uf $(Build.BinariesDirectory)\onnxruntime-java-win-$(msbuildPlatform)\onnxruntime-$(OnnxRuntimeVersion).jar ai\onnxruntime\native\win-x64\onnxruntime4j_jni.pdb
+          jar uf $(Build.BinariesDirectory)\onnxruntime-java-win-$(msbuildPlatform)\onnxruntime-$(OnnxRuntimeVersion).jar Privacy.md ThirdPartyNotices.txt GIT_COMMIT_ID
+          popd
+          pushd $(Build.SourcesDirectory)\java\build\classes\java\test
+          jar cvf $(Build.BinariesDirectory)\onnxruntime-java-win-$(msbuildPlatform)\testing.jar .
+          popd
+          pushd $(Build.SourcesDirectory)\java\build\resources\test
+          rd /s /q ai\onnxruntime\native
+          jar uvf $(Build.BinariesDirectory)\onnxruntime-java-win-$(msbuildPlatform)\testing.jar .
+          popd
+          rd /s /q $(Build.BinariesDirectory)\onnxruntime-java-win-$(msbuildPlatform)\stage
+          dir /s /b $(Build.BinariesDirectory)\onnxruntime-java-win-$(msbuildPlatform)
+        workingDirectory: '$(Build.BinariesDirectory)\RelWithDebInfo'
+        displayName: 'Add symbols and notices to Java'
+
+    - task: ArchiveFiles@2
+      condition: and(succeeded(), eq(variables.build_java, true))
+      displayName: 'Build Java zip'
+      inputs:
+        rootFolderOrFile: '$(Build.BinariesDirectory)\onnxruntime-java-win-$(msbuildPlatform)'
+        includeRootFolder: true
+        archiveType: 'zip' # Options: zip, 7z, tar, wim
+        archiveFile: '$(Build.ArtifactStagingDirectory)\onnxruntime-java-win-$(msbuildPlatform).zip'
+        replaceExistingArchive: true 
+      
+    - task: PublishBuildArtifacts@1
+      condition: and(succeeded(), eq(variables.build_java, true))
+      displayName: 'Publish Java zip'
+      inputs:
+        pathtoPublish: '$(Build.ArtifactStagingDirectory)\onnxruntime-java-win-$(msbuildPlatform).zip' 
+        artifactName: 'drop-onnxruntime-java-win-$(msbuildPlatform)'
+
 
     - ${{ if eq(parameters['DoCompliance'], 'true') }}:
       - task: Semmle@0
