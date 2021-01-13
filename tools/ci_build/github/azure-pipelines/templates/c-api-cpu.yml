@@ -189,7 +189,7 @@ jobs:
         packageName: arm64
         buildparameter: --arm64  --build_java
         runTests: false
-        build_java: true
+        build_java: false
   steps:
     - template: telemetry-steps.yml
     
@@ -293,6 +293,9 @@ jobs:
       inputs:
         script: |
           @echo on
+          cd $(Build.SourcesDirectory)\java
+          gradle cmakeCheck -DcmakeBuildDir=$(Build.BinariesDirectory)
+          if %errorlevel% neq 0 exit /b %errorlevel%
           set NATIVE_FOLDER=$(Build.BinariesDirectory)\onnxruntime-java-win-$(msbuildPlatform)\stage\ai\onnxruntime\native\win-x64
           mkdir %NATIVE_FOLDER%
           echo "Directories created"
