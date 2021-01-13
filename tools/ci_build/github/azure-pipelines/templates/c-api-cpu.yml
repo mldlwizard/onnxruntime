@@ -136,7 +136,7 @@ jobs:
     - template: java-api-artifacts-package-and-publish-steps-posix.yml
       parameters:
           arch: 'osx-x64'
-          buildConfig: 'RelWithDebInfo'
+          buildConfig: 'Release'
           artifactName: 'onnxruntime-java-osx-x64'
           version: '$(OnnxRuntimeVersion)'
           libraryName: 'libonnxruntime.dylib'
