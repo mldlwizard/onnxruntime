@@ -294,7 +294,7 @@ jobs:
         script: |
           @echo on
           cd $(Build.SourcesDirectory)\java
-          gradle cmakeCheck -DcmakeBuildDir=$(Build.BinariesDirectory)
+          gradle cmakeCheck -DcmakeBuildDir=$(Build.BinariesDirectory)\RelWithDebInfo
           if %errorlevel% neq 0 exit /b %errorlevel%
           set NATIVE_FOLDER=$(Build.BinariesDirectory)\onnxruntime-java-win-$(msbuildPlatform)\stage\ai\onnxruntime\native\win-x64
           mkdir %NATIVE_FOLDER%
