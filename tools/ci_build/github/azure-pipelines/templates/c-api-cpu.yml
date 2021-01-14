@@ -296,6 +296,7 @@ jobs:
           cd $(Build.SourcesDirectory)\java
           gradle cmakeCheck -DcmakeBuildDir=$(Build.BinariesDirectory)\RelWithDebInfo
           if %errorlevel% neq 0 exit /b %errorlevel%
+          cd $(Build.BinariesDirectory)\RelWithDebInfo
           set NATIVE_FOLDER=$(Build.BinariesDirectory)\onnxruntime-java-win-$(msbuildPlatform)\stage\ai\onnxruntime\native\win-x64
           mkdir %NATIVE_FOLDER%
           echo "Directories created"
@@ -328,25 +329,14 @@ jobs:
           rd /s /q $(Build.BinariesDirectory)\onnxruntime-java-win-$(msbuildPlatform)\stage
           dir /s /b $(Build.BinariesDirectory)\onnxruntime-java-win-$(msbuildPlatform)
         workingDirectory: '$(Build.BinariesDirectory)\RelWithDebInfo'
-        displayName: 'Add symbols and notices to Java'
-
-    - task: ArchiveFiles@2
-      condition: and(succeeded(), eq(variables.build_java, true))
-      displayName: 'Build Java zip'
-      inputs:
-        rootFolderOrFile: '$(Build.BinariesDirectory)\onnxruntime-java-win-$(msbuildPlatform)'
-        includeRootFolder: true
-        archiveType: 'zip' # Options: zip, 7z, tar, wim
-        archiveFile: '$(Build.ArtifactStagingDirectory)\onnxruntime-java-win-$(msbuildPlatform).zip'
-        replaceExistingArchive: true 
+        displayName: 'Add symbols and notices to Java'    
       
     - task: PublishBuildArtifacts@1
       condition: and(succeeded(), eq(variables.build_java, true))
-      displayName: 'Publish Java zip'
+      displayName: 'Publish Java temp binaries'
       inputs:
-        pathtoPublish: '$(Build.ArtifactStagingDirectory)\onnxruntime-java-win-$(msbuildPlatform).zip' 
+        pathtoPublish: '$(Build.BinariesDirectory)\onnxruntime-java-win-$(msbuildPlatform)' 
         artifactName: 'drop-onnxruntime-java-win-$(msbuildPlatform)'
-
 
     - ${{ if eq(parameters['DoCompliance'], 'true') }}:
       - task: Semmle@0
@@ -399,7 +389,7 @@ jobs:
     inputs:
       buildType: 'current'
       artifactName: 'drop-onnxruntime-java-win-x64'
-      targetPath: '$(Build.BinariesDirectory)\java-artifact'
+      targetPath: '$(Build.BinariesDirectory)\java-artifact\onnxruntime-java-win-x64'
 
   - task: DownloadPipelineArtifact@2
     displayName: 'Download Pipeline Artifact - Linux x64'
@@ -413,13 +403,7 @@ jobs:
     inputs:
       buildType: 'current'
       artifactName: 'drop-onnxruntime-java-osx-x64'
-      targetPath: '$(Build.BinariesDirectory)\java-artifact'
-
-  - task: ExtractFiles@1
-    inputs:
-      archiveFilePatterns: '$(Build.BinariesDirectory)\java-artifact\onnxruntime-java-win-x64.zip'
-      destinationFolder: '$(Build.BinariesDirectory)\java-artifact'
-      cleanDestinationFolder: false
+      targetPath: '$(Build.BinariesDirectory)\java-artifact'  
 
   - task: ExtractFiles@1
     inputs:
