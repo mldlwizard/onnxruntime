@@ -396,26 +396,14 @@ jobs:
     inputs:
       buildType: 'current'
       artifactName: 'drop-onnxruntime-java-linux-x64'
-      targetPath: '$(Build.BinariesDirectory)\java-artifact'
+      targetPath: '$(Build.BinariesDirectory)\java-artifact\onnxruntime-java-linux-x64'
 
   - task: DownloadPipelineArtifact@2
     displayName: 'Download Pipeline Artifact - MacOS x64'
     inputs:
       buildType: 'current'
       artifactName: 'drop-onnxruntime-java-osx-x64'
-      targetPath: '$(Build.BinariesDirectory)\java-artifact'  
-
-  - task: ExtractFiles@1
-    inputs:
-      archiveFilePatterns: '$(Build.BinariesDirectory)\java-artifact\onnxruntime-java-linux-x64.zip'
-      destinationFolder: '$(Build.BinariesDirectory)\java-artifact'
-      cleanDestinationFolder: false
-
-  - task: ExtractFiles@1
-    inputs:
-      archiveFilePatterns: '$(Build.BinariesDirectory)\java-artifact\onnxruntime-java-osx-x64.zip'
-      destinationFolder: '$(Build.BinariesDirectory)\java-artifact'
-      cleanDestinationFolder: false
+      targetPath: '$(Build.BinariesDirectory)\java-artifact\onnxruntime-java-osx-x64'
  
   - task: CmdLine@2
     inputs:
@@ -427,9 +415,9 @@ jobs:
         jar uf  $(Build.BinariesDirectory)\java-artifact\onnxruntime-java-win-x64\onnxruntime-$(OnnxRuntimeVersion).jar .
         popd
         pushd onnxruntime-java-osx-x64
-        jar uf  $(Build.BinariesDirectory)\java-artifact\onnxruntime-java-win-x64\testing.jar libcustom_op_library.dylib
+        jar uf  $(Build.BinariesDirectory)\java-artifact\onnxruntime-java-osx-x64\testing.jar libcustom_op_library.dylib
         del /F /Q libcustom_op_library.dylib
-        jar uf  $(Build.BinariesDirectory)\java-artifact\onnxruntime-java-win-x64\onnxruntime-$(OnnxRuntimeVersion).jar .
+        jar uf  $(Build.BinariesDirectory)\java-artifact\onnxruntime-java-osx-x64\onnxruntime-$(OnnxRuntimeVersion).jar .
         popd
       workingDirectory: '$(Build.BinariesDirectory)\java-artifact'
 
