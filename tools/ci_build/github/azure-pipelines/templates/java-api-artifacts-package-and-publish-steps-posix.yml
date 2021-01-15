@@ -17,5 +17,5 @@ steps:
 
     - task: PublishBuildArtifacts@1
       inputs:
-        pathtoPublish: '$(Build.BinariesDirectory)/${{parameters.buildConfig}}'
+        pathtoPublish: '$(Build.BinariesDirectory)/${{parameters.artifactName}}'
         artifactName: 'drop-${{parameters.artifactName}}'
