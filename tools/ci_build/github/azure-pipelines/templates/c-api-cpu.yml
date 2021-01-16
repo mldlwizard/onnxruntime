@@ -48,9 +48,9 @@ jobs:
         script: |
           mkdir -p $HOME/.onnx
           docker run --rm --volume /data/onnx:/data/onnx:ro --volume $(Build.SourcesDirectory):/onnxruntime_src --volume $(Build.BinariesDirectory):/build \
-          --volume $HOME/.onnx:/home/onnxruntimedev/.onnx -e NIGHTLY_BUILD onnxruntimecentoscpubuild python3 \
+          --volume $HOME/.onnx:/home/onnxruntimedev/.onnx -e NIGHTLY_BUILD onnxruntimecentoscpubuild /bin/bash -c "python3 \
           /onnxruntime_src/tools/ci_build/build.py --build_java --build_dir /build --config Release \
-          --skip_submodule_sync  --parallel --build_shared_lib ${{ parameters.AdditionalBuildFlags }}
+          --skip_submodule_sync  --parallel --build_shared_lib ${{ parameters.AdditionalBuildFlags }} && cd /build/Release && make install DESTDIR=/build/linux-x64"
         workingDirectory: $(Build.SourcesDirectory)
 
     - script: |
@@ -579,13 +579,13 @@ jobs:
       artifactName: 'drop-signed-nuget'
       targetPath: '$(Build.ArtifactStagingDirectory)'
 
-  - task: RoslynAnalyzers@2
-    displayName: 'Run Roslyn Analyzers'
-    inputs:
-      userProvideBuildInfo: msBuildInfo
-      msBuildArchitecture: 'Any CPU'
-      msBuildCommandline: '"C:\Program Files\dotnet\dotnet.exe" build $(Build.SourcesDirectory)\csharp\OnnxRuntime.CSharp.sln --configuration RelWithDebInfo -p:Platform="Any CPU" -p:OnnxRuntimeBuildDirectory="$(Build.BinariesDirectory)" -p:OrtPackageId=$(OrtPackageId)'
-    condition: and(succeeded(), eq('${{ parameters.DoCompliance }}', true))
+  # - task: RoslynAnalyzers@2
+    # displayName: 'Run Roslyn Analyzers'
+    # inputs:
+      # userProvideBuildInfo: msBuildInfo
+      # msBuildArchitecture: 'Any CPU'
+      # msBuildCommandline: '"C:\Program Files\dotnet\dotnet.exe" build $(Build.SourcesDirectory)\csharp\OnnxRuntime.CSharp.sln --configuration RelWithDebInfo -p:Platform="Any CPU" -p:OnnxRuntimeBuildDirectory="$(Build.BinariesDirectory)" -p:OrtPackageId=$(OrtPackageId)'
+    # condition: and(succeeded(), eq('${{ parameters.DoCompliance }}', true))
 
   - template: component-governance-component-detection-steps.yml
     parameters :
