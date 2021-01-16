@@ -40,7 +40,7 @@ jobs:
   condition: succeeded()
   steps:
   - checkout: self
-    submodules: false
+    submodules: true
   - task: DownloadPipelineArtifact@0
     displayName: 'Download Pipeline Artifact - NuGet'
     inputs:
