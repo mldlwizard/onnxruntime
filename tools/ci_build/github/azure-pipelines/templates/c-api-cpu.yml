@@ -38,7 +38,9 @@ jobs:
     OrtPackageId: ${{ parameters.OrtNugetPackageId }}
     breakCodesignValidationInjection: true
   condition: succeeded()
-  steps: 
+  steps:
+  - checkout: self
+    submodules: true
   - task: DownloadPipelineArtifact@0
     displayName: 'Download Pipeline Artifact - NuGet'
     inputs:
