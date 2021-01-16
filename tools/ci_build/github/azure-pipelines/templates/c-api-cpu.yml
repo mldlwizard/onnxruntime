@@ -211,19 +211,21 @@ jobs:
       targetPath: '$(Build.ArtifactStagingDirectory)'
 
   - powershell: |
-     Get-ChildItem -Path $(Build.ArtifactStagingDirectory)/*.nupkg | foreach {7z x $_.fullname}
+     $counter = 0
+     Get-ChildItem -Path $(Build.ArtifactStagingDirectory)/*.nupkg | foreach {7z x -y -o$counter $_.fullname;$counter++}
     workingDirectory: '$(Build.ArtifactStagingDirectory)'
     displayName: 'Unzip files to sanitize the PE files'
 
   - task: BinSkim@3
     displayName: 'Run BinSkim'
-  # - task: RoslynAnalyzers@2
-    # displayName: 'Run Roslyn Analyzers'
-    # inputs:
-      # userProvideBuildInfo: msBuildInfo
-      # msBuildArchitecture: 'Any CPU'
-      # msBuildCommandline: '"C:\Program Files\dotnet\dotnet.exe" build $(Build.SourcesDirectory)\csharp\OnnxRuntime.CSharp.sln --configuration RelWithDebInfo -p:Platform="Any CPU" -p:OnnxRuntimeBuildDirectory="$(Build.BinariesDirectory)" -p:OrtPackageId=$(OrtPackageId)'
-    # condition: and(succeeded(), eq('${{ parameters.DoCompliance }}', true))
+
+  - task: RoslynAnalyzers@2
+    displayName: 'Run Roslyn Analyzers'
+    inputs:
+      userProvideBuildInfo: msBuildInfo
+      msBuildArchitecture: DotNetCore
+      msBuildCommandline: '"C:\Program Files\dotnet\dotnet.exe" build $(Build.SourcesDirectory)\csharp\OnnxRuntime.CSharp.sln --configuration RelWithDebInfo -p:Platform="Any CPU" -p:OnnxRuntimeBuildDirectory="$(Build.BinariesDirectory)" -p:OrtPackageId=$(OrtPackageId)'
+    condition: and(succeeded(), eq('${{ parameters.DoCompliance }}', true))
 
   - template: component-governance-component-detection-steps.yml
     parameters :
