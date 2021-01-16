@@ -36,6 +36,7 @@ jobs:
   pool: 'Win-CPU-2019'
   variables:
     OrtPackageId: ${{ parameters.OrtNugetPackageId }}
+    breakCodesignValidationInjection: true
   condition: succeeded()
   steps: 
   - task: DownloadPipelineArtifact@0
@@ -209,6 +210,13 @@ jobs:
       artifactName: 'drop-signed-nuget'
       targetPath: '$(Build.ArtifactStagingDirectory)'
 
+  - powershell: |
+     Get-ChildItem -Path $(Build.ArtifactStagingDirectory)/*.nupkg | foreach {7z x $_.fullname}
+    workingDirectory: '$(Build.ArtifactStagingDirectory)'
+    displayName: 'Unzip files to sanitize the PE files'
+
+  - task: BinSkim@3
+    displayName: 'Run BinSkim'
   # - task: RoslynAnalyzers@2
     # displayName: 'Run Roslyn Analyzers'
     # inputs:
