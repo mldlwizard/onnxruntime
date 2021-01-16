@@ -155,6 +155,12 @@ jobs:
       arguments: '--configuration RelWithDebInfo -p:Platform="Any CPU" -p:OnnxRuntimeBuildDirectory="$(Build.BinariesDirectory)" -p:OrtPackageId=$(OrtPackageId)'
       workingDirectory: '$(Build.SourcesDirectory)\csharp'
 
+  - template: win-esrp-dll.yml
+    parameters:
+      FolderPath: '$(Build.SourcesDirectory)\csharp\src\Microsoft.ML.OnnxRuntime\bin\RelWithDebInfo'
+      DisplayName: 'ESRP - Sign C# dlls'
+      DoEsrp: ${{ parameters.DoEsrp }}
+
   - task: DotNetCoreCLI@2
     displayName: 'Build Nuget Packages'
     inputs:
@@ -163,12 +169,6 @@ jobs:
       configuration: RelWithDebInfo
       arguments: '--configuration RelWithDebInfo -t:CreatePackage -p:Platform="Any CPU" -p:OnnxRuntimeBuildDirectory="$(Build.BinariesDirectory)" -p:OrtPackageId=$(OrtPackageId)'
       workingDirectory: '$(Build.SourcesDirectory)\csharp'
-        
-  - template: win-esrp-dll.yml
-    parameters:
-      FolderPath: '$(Build.SourcesDirectory)\csharp\src\Microsoft.ML.OnnxRuntime\bin\RelWithDebInfo'
-      DisplayName: 'ESRP - Sign C# dlls'
-      DoEsrp: ${{ parameters.DoEsrp }}
 
   - task: BatchScript@1
     displayName: 'Bundle Native NuGet and other binaries'
@@ -225,5 +225,4 @@ jobs:
     displayName: 'Clean Agent Directories'
     condition: always()
 
-- template: ../nuget/templates/test_all_os.yml
 
