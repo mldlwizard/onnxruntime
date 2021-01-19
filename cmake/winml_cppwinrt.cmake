@@ -133,6 +133,7 @@ function(target_cppwinrt
 
         convert_forward_slashes_to_back(${renamed_idl_fullpath} renamed_idl_fullpath_back_slash)
 
+        message("PRINTING REF PATH: ${cmake_current_binary_dir_back_slash}")
         # using add_custom_command trick to prevent rerunning script unless ${file} is changed
         add_custom_command(
             OUTPUT ${header_filename} ${winmd_filename}
