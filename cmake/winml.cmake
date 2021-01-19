@@ -123,6 +123,7 @@ target_cppwinrt(winml_api_experimental
   "${CMAKE_CURRENT_BINARY_DIR}/Microsoft.AI.MachineLearning.winmd"
 )
 add_dependencies(winml_api_experimental RESTORE_NUGET_PACKAGES)
+add_dependencies(winml_api_experimental winml_api)
 
 target_midl(winml_api_native
   ${idl_native}             # winml native idl to compile
