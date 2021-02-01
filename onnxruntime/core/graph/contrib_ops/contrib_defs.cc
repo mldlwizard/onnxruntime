@@ -2343,6 +2343,40 @@ It's an extension of Gelu. It takes the sum of input A and bias input B as the i
           propagateShapeFromInputToOutput(ctx, 0, 0);
         }
       });
+    
+    
+  static const char* TestOp_doc = R"DOC(
+Created for testing
+)DOC";
+
+  ONNX_CONTRIB_OPERATOR_SCHEMA(TestOp)
+      .SetDomain(kOnnxDomain)
+      .SinceVersion(1)
+      .SetDoc(TestOp_doc)
+      .Input(
+          0,
+          "X",
+          "Input tensor",
+          "T")
+      .Output(
+          0,
+          "Y",
+          "Output tensor",
+          "T")
+      .TypeConstraint(
+          "T",
+          {"tensor(float)",
+             "tensor(int32)",
+             "tensor(int8)",
+             "tensor(int16)",
+             "tensor(int64)",
+             "tensor(float16)",
+             "tensor(double)",
+             "tensor(bfloat16)"},
+          "Constrain input and output types to all numeric tensors and bool tensors.")
+          .TypeAndShapeInferenceFunction(ONNX_NAMESPACE::propagateShapeAndTypeFromFirstInput);
+
+  
 
   ONNX_CONTRIB_OPERATOR_SCHEMA(BiasSoftmax)
       .SetDomain(kMSDomain)
