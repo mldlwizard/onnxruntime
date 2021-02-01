@@ -9,7 +9,7 @@ namespace test {
 
 // range = [-ve, +ve]
 TEST(QuantizeLinearOpTest, DQL) {
-  OpTester test("DQLr", 11);
+  OpTester test("DQL", 11);
   std::vector<int64_t> dims{6};
   test.AddInput<float>("x", dims, {0, 2, -3, -2.5f, 1.34f, 0.5f});  
   test.AddOutput<uint8_t>("y", dims, {153, 255, 0, 26, 221, 179});
