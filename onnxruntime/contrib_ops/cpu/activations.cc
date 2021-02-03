@@ -33,6 +33,12 @@ ONNX_OPERATOR_KERNEL_EX(
     kCpuExecutionProvider,
     KernelDefBuilder().TypeConstraint("T", DataTypeImpl::GetTensorType<float>()),
     Gelu<float>);
-
+ONNX_OPERATOR_KERNEL_EX(
+    HardSwish,
+    kOnnxDomain,
+    1,
+    kCpuExecutionProvider,
+    KernelDefBuilder().TypeConstraint("T", DataTypeImpl::GetTensorType<float>()),
+    HardSwish<float>);
 }  // namespace contrib
 }  // namespace onnxruntime
