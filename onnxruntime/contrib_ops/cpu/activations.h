@@ -64,6 +64,7 @@ struct HardSwish : public ElementWiseRangedTransform<T> {
 namespace contrib {
 DEFINE_ELE_KERNEL(ScaledTanh);
 DEFINE_ELE_KERNEL(ParametricSoftplus);
+DEFINE_ELE_KERNEL(HardSwish);
 
 template <typename T>
 class Gelu : public OpKernel {
