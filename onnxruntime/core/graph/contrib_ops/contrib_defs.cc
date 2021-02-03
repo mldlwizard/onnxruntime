@@ -546,7 +546,7 @@ the tensor elementwise.)DOC";
       .Input(0,"X","Input tensor","T",OpSchema::Single,true,1,OpSchema::Differentiable)
       .Output(0,"Y","Output tensor","T",OpSchema::Single,true,1,OpSchema::Differentiable)
       .TypeConstraint("T",{"tensor(float)","tensor(float16)","tensor(double)","tensor(bfloat16)"},"Constrain input and output types to float or half tensors.")
-      .TypeAndShapeInferenceFunction(ONNX_NAMESPACE::propagateShapeAndTypeFromFirstInput));
+      .TypeAndShapeInferenceFunction(ONNX_NAMESPACE::propagateShapeAndTypeFromFirstInput);
     
   ONNX_CONTRIB_OPERATOR_SCHEMA(SkipLayerNormalization)
       .SetDomain(kMSDomain)
