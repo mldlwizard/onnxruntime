@@ -56,6 +56,7 @@ REGISTER_UNARY_ELEMENTWISE_KERNEL(Softsign, 1);
 REGISTER_VERSIONED_UNARY_ELEMENTWISE_TYPED_KERNEL_ALIAS(Tanh, Tanh, 6, 12, 13, float);
 REGISTER_VERSIONED_UNARY_ELEMENTWISE_TYPED_KERNEL_ALIAS(Tanh, Tanh, 6, 12, 13, double);
 REGISTER_UNARY_ELEMENTWISE_KERNEL(ThresholdedRelu, 10);
+REGISTER_UNARY_ELEMENTWISE_KERNEL(HardSwish, 11);
 
 namespace functors {
 template <typename T>
@@ -70,6 +71,7 @@ Status ElementWiseRangedTransform<T>::Create(const std::string& type, const Node
   CREATE_ELE_KERNEL(Softsign);
   CREATE_ELE_KERNEL(Tanh);
   CREATE_ELE_KERNEL(ThresholdedRelu);
+  CREATE_ELE_KERNEL(HardSwish);
   CREATE_ELE_KERNEL(Selu);
 #ifndef DISABLE_CONTRIB_OPS
   CREATE_ELE_KERNEL(ParametricSoftplus);
