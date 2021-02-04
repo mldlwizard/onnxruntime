@@ -46,6 +46,28 @@ struct HardSigmoid : public ElementWiseRangedTransform<T> {
 };
 
 template <typename T>
+struct HardSwish : public ElementWiseRangedTransform<T> {
+  Status Init(const onnxruntime::NodeAttributes&) {
+    return Status::OK();
+  }
+  ElementWiseRangedTransform<T>* Copy() const {
+    using T1 = typename std::remove_pointer<decltype(this)>::type;
+    using T2 = typename std::remove_const<T1>::type;
+    return new T2(*this);
+  }
+  float Cost() const final {
+    return 1.0f;
+  }
+  void operator()(std::ptrdiff_t first, std::ptrdiff_t last) const final {
+    ptrdiff_t len = last - first;
+    T* output_ptr = this->output + first;
+    ConstEigenVectorArrayMap<T> xm(this->input + first, len);
+    EigenVectorArrayMap<T> ym(output_ptr, len);
+    ym = xm*(((xm+3).cwiseMax(0.0f).cwiseMin(6.0f))/6)
+  }
+};
+  
+template <typename T>
 struct LeakyRelu : public ElementWiseRangedTransform<T> {
   ORT_GET_FLOAT_ATTR_AND_RETURN(alpha);
 
@@ -214,6 +236,7 @@ struct Selu : public ElementWiseRangedTransform<T> {
 
 DEFINE_ELE_KERNEL(Elu);
 DEFINE_ELE_KERNEL(HardSigmoid);
+DEFINE_ELE_KERNEL(HardSwish);
 DEFINE_ELE_KERNEL(LeakyRelu);
 DEFINE_ELE_KERNEL(Softplus);
 DEFINE_ELE_KERNEL(Relu);
