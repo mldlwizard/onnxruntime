@@ -46,25 +46,13 @@ struct ParametricSoftplus : public ElementWiseRangedTransform<T> {
              .select(xm * (T)beta + ((-xm * (T)beta).exp() + 1.0f).log(), ((xm * (T)beta).exp() + 1.0f).log());
   }
 };
-template <typename T>
-struct HardSwish : public ElementWiseRangedTransform<T> {
-  float Cost() const final {
-    return 0.5f;
-  }
-  void operator()(std::ptrdiff_t first, std::ptrdiff_t last) const final {
-    ptrdiff_t len = last - first;
-    T* output_ptr = this->output + first;
-    ConstEigenVectorArrayMap<T> xm(this->input + first, len);
-    EigenVectorArrayMap<T> ym(output_ptr, len);
-    ym = (((( xm + 3).cwiseMin(1.0f)).cwiseMax(0.0f))/6)*xm;
-  }
-};
+
 }  // namespace functors
 
 namespace contrib {
 DEFINE_ELE_KERNEL(ScaledTanh);
 DEFINE_ELE_KERNEL(ParametricSoftplus);
-DEFINE_ELE_KERNEL(HardSwish);
+
 
 template <typename T>
 class Gelu : public OpKernel {
