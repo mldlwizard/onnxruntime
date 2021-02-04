@@ -63,7 +63,7 @@ struct HardSwish : public ElementWiseRangedTransform<T> {
     T* output_ptr = this->output + first;
     ConstEigenVectorArrayMap<T> xm(this->input + first, len);
     EigenVectorArrayMap<T> ym(output_ptr, len);
-    ym = xm*(((xm+3).cwiseMax(0.0f).cwiseMin(6.0f))/6)
+    ym = xm*(((xm+3).cwiseMax(0.0f).cwiseMin(6.0f))/6);
   }
 };
   
