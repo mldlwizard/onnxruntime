@@ -2376,7 +2376,16 @@ Created for testing
           "Constrain input and output types to all numeric tensors and bool tensors.")
           .TypeAndShapeInferenceFunction(ONNX_NAMESPACE::propagateShapeAndTypeFromFirstInput);
 
-  
+static const char* HardSwish_ver14_doc = R"DOC(HardSwish takes one input data (Tensor<T>) and produces one output data (Tensor<T>) where function, y = x*(min(max(0,x+3),6))/6, is applied to
+the tensor elementwise.)DOC";
+  ONNX_CONTRIB_OPERATOR_SCHEMA(HardSwish)
+      .SetDomain(kOnnxDomain)
+      .SinceVersion(1)
+      .SetDoc(HardSwish_ver14_doc)
+      .Input(0,"X","Input tensor","T",OpSchema::Single,true,1,OpSchema::Differentiable)
+      .Output(0,"Y","Output tensor","T",OpSchema::Single,true,1,OpSchema::Differentiable)
+      .TypeConstraint("T",{"tensor(float)","tensor(float16)","tensor(double)","tensor(bfloat16)"},"Constrain input and output types to float or half tensors.")
+      .TypeAndShapeInferenceFunction(ONNX_NAMESPACE::propagateShapeAndTypeFromFirstInput);
 
   ONNX_CONTRIB_OPERATOR_SCHEMA(BiasSoftmax)
       .SetDomain(kMSDomain)
