@@ -45,7 +45,7 @@ struct HardSigmoid : public ElementWiseRangedTransform<T> {
   }
 };
 
-template <typename T>
+/*template <typename T>
 struct HardSwish : public ElementWiseRangedTransform<T> {
   Status Init(const onnxruntime::NodeAttributes&) {
     return Status::OK();
@@ -65,7 +65,7 @@ struct HardSwish : public ElementWiseRangedTransform<T> {
     EigenVectorArrayMap<T> ym(output_ptr, len);
     ym = xm*(((xm+3).cwiseMax(0.0f).cwiseMin(6.0f))/6);
   }
-};
+};*/
   
 template <typename T>
 struct LeakyRelu : public ElementWiseRangedTransform<T> {
@@ -236,7 +236,7 @@ struct Selu : public ElementWiseRangedTransform<T> {
 
 DEFINE_ELE_KERNEL(Elu);
 DEFINE_ELE_KERNEL(HardSigmoid);
-DEFINE_ELE_KERNEL(HardSwish);
+//DEFINE_ELE_KERNEL(HardSwish);
 DEFINE_ELE_KERNEL(LeakyRelu);
 DEFINE_ELE_KERNEL(Softplus);
 DEFINE_ELE_KERNEL(Relu);
