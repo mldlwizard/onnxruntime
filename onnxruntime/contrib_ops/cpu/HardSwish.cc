@@ -7,8 +7,8 @@ ONNX_OPERATOR_KERNEL_EX(
     kOnnxDomain,
     1,
     kCpuExecutionProvider,
-    KernelDefBuilder().TypeConstraint("T", DataTypeImpl::GetTensorType<float,double>()),
-    HardSwish
+    KernelDefBuilder().TypeConstraint("T", BuildKernelDefConstraints<float, double>()),
+    HardSwish<float>
 );
 
 }

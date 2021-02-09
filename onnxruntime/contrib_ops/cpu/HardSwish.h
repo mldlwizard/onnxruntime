@@ -22,7 +22,7 @@ public:
   auto Y_Data = (Y->template MutableData<T>());
 
   for (int64_t i = 0, sz = dims.Size(); i < sz; i++, Y_Data++, X_Data++) {
-    *Y_Data[i] =( *X_Data[i])*(std::fmin(std::fmax(*X_Data[i] + 3.0f,0.0f),6.0f)/6.0f;
+    *Y_Data =( *X_Data)*(std::fmin(std::fmax(*X_Data + 3.0f,0.0f),6.0f))/6.0f;
     }
 
     return Status::OK();
