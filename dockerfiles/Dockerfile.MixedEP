@@ -8,6 +8,7 @@
 FROM nvcr.io/nvidia/tensorrt:20.07.1-py3
 MAINTAINER Vinitra Swamy "viswamy@microsoft.com"
 
+ARG DEVICE=CPU_FP32
 ARG ONNXRUNTIME_REPO=https://github.com/Microsoft/onnxruntime
 ARG ONNXRUNTIME_BRANCH=master
 
@@ -16,38 +17,9 @@ RUN apt-get update &&\
 RUN unattended-upgrade
 
 WORKDIR /code
-ENV PATH /usr/local/nvidia/bin:/usr/local/cuda/bin:/code/cmake-3.14.3-Linux-x86_64/bin:/opt/miniconda/bin:${PATH}
-ENV LD_LIBRARY_PATH /opt/miniconda/lib:$LD_LIBRARY_PATH
-
-# Prepare onnxruntime repository & build onnxruntime with TensorRT
-RUN git clone --single-branch --branch ${ONNXRUNTIME_BRANCH} --recursive ${ONNXRUNTIME_REPO} onnxruntime &&\
-    /bin/sh onnxruntime/dockerfiles/scripts/install_common_deps.sh &&\
-    cp onnxruntime/docs/Privacy.md /code/Privacy.md &&\
-    cp onnxruntime/dockerfiles/LICENSE-IMAGE.txt /code/LICENSE-IMAGE.txt &&\
-    cp onnxruntime/ThirdPartyNotices.txt /code/ThirdPartyNotices.txt &&\
-    cd onnxruntime &&\
-    /bin/sh ./build.sh --cuda_home /usr/local/cuda --cudnn_home /usr/lib/x86_64-linux-gnu/ --use_tensorrt --tensorrt_home /workspace/tensorrt --config Release --build_wheel --update --build --cmake_extra_defines ONNXRUNTIME_VERSION=$(cat ./VERSION_NUMBER) &&\
-    pip install /code/onnxruntime/build/Linux/Release/dist/*.whl &&\
-    cd .. &&\
-    rm -rf onnxruntime cmake-3.14.3-Linux-x86_64
-
-
-#-------------------------------------------------------------------------
-# Copyright(C) 2019 Intel Corporation.
-# Licensed under the MIT License.
-#--------------------------------------------------------------------------
-
-FROM ubuntu:18.04
-
-ARG DEVICE=CPU_FP32
-ARG ONNXRUNTIME_REPO=https://github.com/microsoft/onnxruntime.git
-ARG ONNXRUNTIME_BRANCH=master
-
-WORKDIR /code
 ARG MY_ROOT=/code
-
-ENV PATH /opt/miniconda/bin:/code/cmake-3.14.3-Linux-x86_64/bin:$PATH
-ENV LD_LIBRARY_PATH=/opt/miniconda/lib:/usr/lib:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+ENV PATH /usr/local/nvidia/bin:/usr/local/cuda/bin:/code/cmake-3.14.3-Linux-x86_64/bin:/opt/miniconda/bin:${PATH}
+ENV LD_LIBRARY_PATH /opt/miniconda/lib:/usr/lib:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
 
 ENV INTEL_OPENVINO_DIR=/opt/intel/openvino_2021.2.200
 ENV InferenceEngine_DIR=${INTEL_OPENVINO_DIR}/deployment_tools/inference_engine/share
@@ -92,11 +64,19 @@ RUN apt update && \
     cd ${MY_ROOT} && \
     locale-gen en_US.UTF-8 && update-locale LANG=en_US.UTF-8  && \
     pip3 install cython && \
-# Download and build ONNX Runtime
+    
+
+
+# Prepare onnxruntime repository & build onnxruntime with TensorRT
     cd ${MY_ROOT} && \
-    git clone --recursive -b ${ONNXRUNTIME_BRANCH} ${ONNXRUNTIME_REPO} && \
-    /bin/sh onnxruntime/dockerfiles/scripts/install_common_deps.sh && \
+# Mount the ONNXruntime
+    COPY mk/onnxruntime .
+    /bin/sh onnxruntime/dockerfiles/scripts/install_common_deps.sh &&\
     cd onnxruntime/cmake/external/onnx && python3 setup.py install && \
-    cd ${MY_ROOT}/onnxruntime && ./build.sh --config Release --update --build --parallel --use_openvino ${DEVICE} --build_wheel && \
+    cd ${MY_ROOT}/onnxruntime && \
+    /bin/sh ./build.sh --cuda_home /usr/local/cuda --cudnn_home /usr/lib/x86_64-linux-gnu/ --use_tensorrt --tensorrt_home /workspace/tensorrt --use_openvino ${DEVICE} --config Release --build_wheel --update --build --parallel --cmake_extra_defines ONNXRUNTIME_VERSION=$(cat ./VERSION_NUMBER) &&\
     pip install build/Linux/Release/dist/*-linux_x86_64.whl && \
-    cd ${MY_ROOT}/ && rm -rf onnxruntime
+    cd ${MY_ROOT}/ && rm -rf onnxruntime cmake-3.14.3-Linux-x86_64
+
+
+
