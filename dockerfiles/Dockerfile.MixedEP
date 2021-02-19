@@ -70,7 +70,7 @@ RUN apt update && \
 # Prepare onnxruntime repository & build onnxruntime with TensorRT
     cd ${MY_ROOT} && \
 # Mount the ONNXruntime
-    COPY mk/onnxruntime .
+COPY onnxruntime . && \
     /bin/sh onnxruntime/dockerfiles/scripts/install_common_deps.sh &&\
     cd onnxruntime/cmake/external/onnx && python3 setup.py install && \
     cd ${MY_ROOT}/onnxruntime && \
